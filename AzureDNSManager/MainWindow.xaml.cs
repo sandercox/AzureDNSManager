@@ -23,6 +23,7 @@ namespace AzureDNSManager
         public MainWindow()
         {
             InitializeComponent();
+            this.DataContext = new AzureDNSViewModel();
         }
     }
 }
