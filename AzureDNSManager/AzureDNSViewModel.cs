@@ -2,6 +2,8 @@
 using Microsoft.Azure.Common.Authentication.Models;
 using Microsoft.Azure.Management.Dns;
 using Microsoft.Azure.Management.Dns.Models;
+using Microsoft.Azure.Management.Resources;
+using Microsoft.Azure.Management.Resources.Models;
 using Microsoft.Azure.Subscriptions;
 using System;
 using System.Collections.Generic;
@@ -20,9 +22,21 @@ namespace AzureDNSManager
 
         private SubscriptionClient _subscriptionClient;
         private DnsManagementClient _dnsManagementClient;
+        private ResourceManagementClient _resourceManagementClient;
 
-        private string _activeResourceGroup = "DNS";
-        public string ActiveResourceGroup
+        private IList<Microsoft.Azure.Management.Resources.Models.ResourceGroupExtended> _resourceGroups = null;
+        public IList<Microsoft.Azure.Management.Resources.Models.ResourceGroupExtended> ResourceGroups
+        {
+            get { return _resourceGroups; }
+            set
+            {
+                _resourceGroups = value;
+                OnPropertyChanged();
+            }
+        }
+
+        private ResourceGroupExtended _activeResourceGroup;
+        public ResourceGroupExtended ActiveResourceGroup
         {
             get { return _activeResourceGroup; }
             set
@@ -55,7 +69,7 @@ namespace AzureDNSManager
                 _activeSubscription = value;
                 OnPropertyChanged();
 
-                ReloadZones();
+                ReloadResourceGroups();
             }
         }
 
@@ -159,13 +173,23 @@ namespace AzureDNSManager
 
         }
 
-        private async void ReloadZones()
+        private async void ReloadResourceGroups()
         {
             if (ActiveSubscription?.Length > 0)
             {
                 _azureContext.Subscription.Id = Guid.Parse(ActiveSubscription);
+                _resourceManagementClient = AzureSession.ClientFactory.CreateClient<ResourceManagementClient>(_azureContext, AzureEnvironment.Endpoint.ResourceManager);
+                ResourceGroups = (await _resourceManagementClient.ResourceGroups.ListAsync(null)).ResourceGroups;
+            }
+        }
+
+        private async void ReloadZones()
+        {
+            if (ActiveSubscription?.Length > 0 && ActiveResourceGroup != null)
+            {
+                _azureContext.Subscription.Id = Guid.Parse(ActiveSubscription);
                 _dnsManagementClient = AzureSession.ClientFactory.CreateClient<DnsManagementClient>(_azureContext, AzureEnvironment.Endpoint.ResourceManager);
-                Zones = new System.Collections.ObjectModel.ObservableCollection<Zone>((await _dnsManagementClient.Zones.ListAsync(ActiveResourceGroup, null)).Zones);
+                Zones = new System.Collections.ObjectModel.ObservableCollection<Zone>((await _dnsManagementClient.Zones.ListAsync(_activeResourceGroup.Name, null)).Zones);
             }
         }
 
@@ -176,7 +200,7 @@ namespace AzureDNSManager
                 Records = null;
             } else
             {
-                Records = new System.Collections.ObjectModel.ObservableCollection<RecordSet>((await _dnsManagementClient.RecordSets.ListAllAsync(ActiveResourceGroup, ActiveZone?.Name, null)).RecordSets);
+                Records = new System.Collections.ObjectModel.ObservableCollection<RecordSet>((await _dnsManagementClient.RecordSets.ListAllAsync(ActiveResourceGroup.Name, ActiveZone?.Name, null)).RecordSets);
             }
         }
     }

@@ -17,7 +17,7 @@
             <ColumnDefinition Width="3*" />
         </Grid.ColumnDefinitions>
         <ComboBox ItemsSource="{Binding Subscriptions}" SelectedValue="{Binding ActiveSubscription}" SelectedValuePath="SubscriptionId" DisplayMemberPath="SubscriptionId" Grid.ColumnSpan="2" />
-        <TextBox Text="{Binding ActiveResourceGroup}" Grid.ColumnSpan="2" Grid.Row="1" />
+        <ComboBox ItemsSource="{Binding ResourceGroups}" SelectedItem="{Binding ActiveResourceGroup}" DisplayMemberPath="Name" Grid.ColumnSpan="2" Grid.Row="1" />
         <Grid Grid.Row="2">
             <Grid.RowDefinitions>
                 <RowDefinition Height="*" />
