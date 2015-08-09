@@ -157,6 +157,10 @@ namespace AzureDNSManager
             { 
                 _subscriptionClient = AzureSession.ClientFactory.CreateClient<SubscriptionClient>(_azureContext, AzureEnvironment.Endpoint.ResourceManager);
                 _subscriptions = _subscriptionClient.Subscriptions.List().Subscriptions;
+                if (_subscriptions?.Count == 1)
+                {
+                    ActiveSubscription = _subscriptions[0].SubscriptionId;
+                }
 
             }
             catch (Exception ex)
@@ -180,6 +184,10 @@ namespace AzureDNSManager
                 _azureContext.Subscription.Id = Guid.Parse(ActiveSubscription);
                 _resourceManagementClient = AzureSession.ClientFactory.CreateClient<ResourceManagementClient>(_azureContext, AzureEnvironment.Endpoint.ResourceManager);
                 ResourceGroups = (await _resourceManagementClient.ResourceGroups.ListAsync(null)).ResourceGroups;
+                if (ResourceGroups?.Count == 1)
+                {
+                    ActiveResourceGroup = ResourceGroups[0];
+                }
             }
         }
 
