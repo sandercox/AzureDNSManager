@@ -13,6 +13,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Input;
 
 namespace AzureDNSManager
 {
@@ -108,8 +109,13 @@ namespace AzureDNSManager
 
         private AzureContext _azureContext;
 
+        public ICommand AddZoneCommand { get; set; }
+
+
         public AzureDNSViewModel()
         {
+            AddZoneCommand = new Command(this.AddZone);
+
             try
             {
                 var azureAccount = new AzureAccount()
@@ -144,7 +150,7 @@ namespace AzureDNSManager
 
             try
             {
-                AzureSession.AuthenticationFactory.Authenticate(_azureContext.Account, _azureContext.Environment, "common", null, Microsoft.Azure.Common.Authentication.ShowDialog.Always);
+                IAccessToken token = AzureSession.AuthenticationFactory.Authenticate(_azureContext.Account, _azureContext.Environment, "common", null, Microsoft.Azure.Common.Authentication.ShowDialog.Auto);
                 _azureContext.Subscription.Account = _azureContext.Account.Id;
             } catch (Exception ex)
             {
@@ -166,6 +172,26 @@ namespace AzureDNSManager
             catch (Exception ex)
             {
                 Console.WriteLine("Error: " + ex.Message);
+            }
+        }
+
+        public async void AddZone()
+        {
+            InputDialog input = new InputDialog("Enter zone name", "Enter the name of the DNS zone to add", "");
+            if (ActiveResourceGroup != null && input.ShowDialog() == true)
+            {
+                ZoneCreateOrUpdateParameters p = new ZoneCreateOrUpdateParameters();
+                p.Zone = new Zone("global");
+                p.Zone.Properties = new ZoneProperties();
+                try
+                {
+                    ZoneCreateOrUpdateResponse responseCreateZone = await _dnsManagementClient.Zones.CreateOrUpdateAsync(ActiveResourceGroup.Name, input.Value, p);
+                    ReloadZones();
+                } catch(Exception ex)
+                {
+                    Debug.WriteLine(ex.Message);
+                    MessageBox.Show("Failed to add zone name!");
+                }
             }
         }
 

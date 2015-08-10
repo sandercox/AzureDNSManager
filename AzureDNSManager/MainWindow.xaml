@@ -42,7 +42,7 @@
                 </ListView.ItemTemplate>
             </ListView>
             <Button Content="Delete" Grid.Row="1"  />
-            <Button Content="Add" Grid.Row="1" Grid.Column="1"  />
+            <Button Content="Add" Command="{Binding AddZoneCommand}"  Grid.Row="1" Grid.Column="1"  />
         </Grid>
         <Grid Grid.Row="2" Grid.Column="1">
             <Grid.RowDefinitions>
