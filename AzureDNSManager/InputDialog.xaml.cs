@@ -30,8 +30,6 @@ namespace AzureDNSManager
             };
         }
 
-        public event PropertyChangedEventHandler PropertyChanged;
-
         private void OKButton_Click(object sender, System.Windows.RoutedEventArgs e)
         {
             DialogResult = true;

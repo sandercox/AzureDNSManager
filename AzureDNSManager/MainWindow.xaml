@@ -6,6 +6,10 @@
         xmlns:local="clr-namespace:AzureDNSManager"
         mc:Ignorable="d"
         Title="MainWindow" Height="350" Width="525">
+    <Window.Resources>
+        <local:IsNullConverter x:Key="isNullConverter"/>
+
+    </Window.Resources>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -57,20 +61,76 @@
                 <ListView.ItemTemplate>
                     <DataTemplate>
                         <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                            </Grid.RowDefinitions>
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" Name="RecordName" />
-                                <ColumnDefinition Width="Auto" Name="RecordType" />
-                                <ColumnDefinition Width="Auto" Name="RecordTtl" />
-                                <ColumnDefinition Width="Auto" Name="RecordId" />
+                                <ColumnDefinition Width="Auto" SharedSizeGroup="RecordName" />
+                                <ColumnDefinition Width="Auto" SharedSizeGroup="RecordType" />
+                                <ColumnDefinition Width="Auto" SharedSizeGroup="RecordTtl" />
+                                <ColumnDefinition Width="Auto" SharedSizeGroup="Priority" />
+                                <ColumnDefinition Width="Auto" SharedSizeGroup="Weight" />
+                                <ColumnDefinition Width="Auto" SharedSizeGroup="Port" />
+                                <ColumnDefinition Width="Auto" SharedSizeGroup="Target" />
                             </Grid.ColumnDefinitions>
-                            <TextBlock Text="{Binding Name}" />
-                            <TextBlock Text="{Binding Type}" Grid.Column="1" />
-                            <TextBlock Text="{Binding Properties.Ttl}" Grid.Column="2" />
-                            <TextBlock Text="{Binding Id}" Grid.Column="3" />
+                            <TextBlock Text="{Binding Name}" Margin="5" />
+                            <TextBlock Grid.Column="1" Margin="5">
+                                <TextBlock.Style>
+                                    <Style>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding Type}" Value="Microsoft.Network/dnszones/A">
+                                                <Setter Property="TextBlock.Text" Value="A" />
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding Type}" Value="Microsoft.Network/dnszones/AAAA">
+                                                <Setter Property="TextBlock.Text" Value="AAAA" />
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding Type}" Value="Microsoft.Network/dnszones/CNAME">
+                                                <Setter Property="TextBlock.Text" Value="CNAME" />
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding Type}" Value="Microsoft.Network/dnszones/MX">
+                                                <Setter Property="TextBlock.Text" Value="MX" />
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding Type}" Value="Microsoft.Network/dnszones/SRV">
+                                                <Setter Property="TextBlock.Text" Value="SRV" />
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding Type}" Value="Microsoft.Network/dnszones/TXT">
+                                                <Setter Property="TextBlock.Text" Value="TXT" />
+                                            </DataTrigger>
+                                            <MultiDataTrigger>
+                                                <MultiDataTrigger.Conditions>
+                                                    <Condition Binding="{Binding Type}" Value="Microsoft.Network/dnszones" />
+                                                    <Condition Binding="{Binding Properties.SoaRecord, Converter={StaticResource isNullConverter}}" Value="False" />
+                                                </MultiDataTrigger.Conditions>
+                                                <Setter Property="TextBlock.Text" Value="SOA" />
+                                            </MultiDataTrigger>
+                                            <MultiDataTrigger>
+                                                <MultiDataTrigger.Conditions>
+                                                    <Condition Binding="{Binding Type}" Value="Microsoft.Network/dnszones" />
+                                                    <Condition Binding="{Binding Properties.NsRecords, Converter={StaticResource isNullConverter}}" Value="False" />
+                                                </MultiDataTrigger.Conditions>
+                                                <Setter Property="TextBlock.Text" Value="NS" />
+                                            </MultiDataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+
+                            <TextBlock Text="{Binding Properties.Ttl}" Grid.Column="2" Margin="5" />
+
+                            <ContentControl Grid.Column="3">
+                                <ContentControl.ContentTemplate>
+                                    <DataTemplate>
+                                        <DataTemplate.Triggers>
+                                            <DataTrigger Binding="{Binding Type}" Value="Microsoft.Network/dnszones/MX">
+                                                <Setter Property="Content">
+                                                    <Setter.Value>
+                                                        <TextBox Text="{Binding HasAnimatedProperties.MxRecords[0].Preference}" />
+                                                    </Setter.Value>
+                                                </Setter>
+                                            </DataTrigger>
+                                        </DataTemplate.Triggers>
+                                    </DataTemplate>
+                                </ContentControl.ContentTemplate>
+                            </ContentControl>
+
+
                         </Grid>
                     </DataTemplate>
                 </ListView.ItemTemplate>

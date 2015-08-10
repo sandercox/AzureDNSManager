@@ -134,6 +134,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="AzureDNSViewModel.cs" />
+    <Compile Include="IsNullConverter.cs" />
     <Compile Include="Command.cs" />
     <Compile Include="InputDialog.xaml.cs">
       <DependentUpon>InputDialog.xaml</DependentUpon>
