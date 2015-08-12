@@ -30,11 +30,23 @@ namespace AzureDNSManager
             };
         }
 
+
         private void OKButton_Click(object sender, System.Windows.RoutedEventArgs e)
         {
             DialogResult = true;
         }
 
         public string Value { get { return (this.DataContext as InputDialogModel)?.Value; } }
+
+        private void txtbox_GotFocus(object sender, RoutedEventArgs e)
+        {
+            txtbox.SelectAll();
+        }
+
+        private void Window_Activated(object sender, EventArgs e)
+        {
+            FocusManager.SetFocusedElement(this, txtbox);
+            txtbox.SelectAll();
+        }
     }
 }

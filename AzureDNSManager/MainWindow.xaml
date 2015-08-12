@@ -5,9 +5,31 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:AzureDNSManager"
         mc:Ignorable="d"
-        Title="MainWindow" Height="350" Width="525">
+        d:DataContext="{d:DesignData Source=SampleData/viewModelSample.xaml}"
+        Title="MainWindow" Height="600" Width="900">
     <Window.Resources>
         <local:IsNullConverter x:Key="isNullConverter"/>
+        <Style x:Key="AddDeleteRow" TargetType="ContentControl">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ContentControl">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <ContentPresenter />
+                            <Button Width="20" Content="-" Grid.Column="1" HorizontalAlignment="Center" Margin="10,0,0,0" />
+                            <Button Command="{Binding DataContext.AddRecordEntryCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding DataContext, RelativeSource={RelativeSource AncestorType=ListBoxItem,AncestorLevel=2}}" Width="20" Content="+" Grid.Column="2" HorizontalAlignment="Center" Margin="4,0,0,0" />
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="ListViewStretch" TargetType="ListViewItem">
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        </Style>
 
     </Window.Resources>
     <Grid>
@@ -40,7 +62,7 @@
                                 <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
                             <TextBlock Text="{Binding Name}" FontSize="16" FontWeight="Normal" />
-                            <TextBlock Text="{Binding Id}" FontSize="9.333" Grid.Row="1" />
+                            <TextBlock Text="{Binding Properties.NumberOfRecordSets}" FontSize="9.333" Grid.Row="1" />
                         </Grid>
                     </DataTemplate>
                 </ListView.ItemTemplate>
@@ -57,87 +79,391 @@
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
-            <ListView ItemsSource="{Binding Records}" Grid.ColumnSpan="2" SelectedItem="{Binding ActiveRecord}" Grid.IsSharedSizeScope="True">
-                <ListView.ItemTemplate>
-                    <DataTemplate>
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" SharedSizeGroup="RecordName" />
-                                <ColumnDefinition Width="Auto" SharedSizeGroup="RecordType" />
-                                <ColumnDefinition Width="Auto" SharedSizeGroup="RecordTtl" />
-                                <ColumnDefinition Width="Auto" SharedSizeGroup="Priority" />
-                                <ColumnDefinition Width="Auto" SharedSizeGroup="Weight" />
-                                <ColumnDefinition Width="Auto" SharedSizeGroup="Port" />
-                                <ColumnDefinition Width="Auto" SharedSizeGroup="Target" />
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Text="{Binding Name}" Margin="5" />
-                            <TextBlock Grid.Column="1" Margin="5">
-                                <TextBlock.Style>
-                                    <Style>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding Type}" Value="Microsoft.Network/dnszones/A">
-                                                <Setter Property="TextBlock.Text" Value="A" />
-                                            </DataTrigger>
-                                            <DataTrigger Binding="{Binding Type}" Value="Microsoft.Network/dnszones/AAAA">
-                                                <Setter Property="TextBlock.Text" Value="AAAA" />
-                                            </DataTrigger>
-                                            <DataTrigger Binding="{Binding Type}" Value="Microsoft.Network/dnszones/CNAME">
-                                                <Setter Property="TextBlock.Text" Value="CNAME" />
-                                            </DataTrigger>
-                                            <DataTrigger Binding="{Binding Type}" Value="Microsoft.Network/dnszones/MX">
-                                                <Setter Property="TextBlock.Text" Value="MX" />
-                                            </DataTrigger>
-                                            <DataTrigger Binding="{Binding Type}" Value="Microsoft.Network/dnszones/SRV">
-                                                <Setter Property="TextBlock.Text" Value="SRV" />
-                                            </DataTrigger>
-                                            <DataTrigger Binding="{Binding Type}" Value="Microsoft.Network/dnszones/TXT">
-                                                <Setter Property="TextBlock.Text" Value="TXT" />
-                                            </DataTrigger>
-                                            <MultiDataTrigger>
-                                                <MultiDataTrigger.Conditions>
-                                                    <Condition Binding="{Binding Type}" Value="Microsoft.Network/dnszones" />
-                                                    <Condition Binding="{Binding Properties.SoaRecord, Converter={StaticResource isNullConverter}}" Value="False" />
-                                                </MultiDataTrigger.Conditions>
-                                                <Setter Property="TextBlock.Text" Value="SOA" />
-                                            </MultiDataTrigger>
-                                            <MultiDataTrigger>
-                                                <MultiDataTrigger.Conditions>
-                                                    <Condition Binding="{Binding Type}" Value="Microsoft.Network/dnszones" />
-                                                    <Condition Binding="{Binding Properties.NsRecords, Converter={StaticResource isNullConverter}}" Value="False" />
-                                                </MultiDataTrigger.Conditions>
-                                                <Setter Property="TextBlock.Text" Value="NS" />
-                                            </MultiDataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </TextBlock.Style>
-                            </TextBlock>
+            <Grid Grid.ColumnSpan="2" Grid.IsSharedSizeScope="True">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid Background="Gray">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition MinWidth="175" Width="Auto" SharedSizeGroup="RecordName" />
+                        <ColumnDefinition MinWidth="25" Width="Auto" SharedSizeGroup="RecordType" />
+                        <ColumnDefinition MinWidth="25" Width="Auto" SharedSizeGroup="RecordTtl" />
+                        <ColumnDefinition MinWidth="25" Width="Auto" SharedSizeGroup="Priority" />
+                        <ColumnDefinition MinWidth="25" Width="Auto" SharedSizeGroup="Weight" />
+                        <ColumnDefinition MinWidth="25" Width="Auto" SharedSizeGroup="Port" />
+                        <ColumnDefinition MinWidth="25" Width="*" />
+                        <ColumnDefinition MinWidth="25" Width="Auto" SharedSizeGroup="Commit" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="Name" Margin="5" />
+                    <TextBlock Text="Type" Margin="5" Grid.Column="1" />
+                    <TextBlock Text="TTL"  Margin="5" Grid.Column="2"/>
+                    <TextBlock Text="Priority"  Margin="5" Grid.Column="3"/>
+                    <TextBlock Text="Weight"  Margin="5" Grid.Column="4"/>
+                    <TextBlock Text="Port"  Margin="5" Grid.Column="5"/>
+                    <TextBlock Text="Target"  Margin="5" Grid.Column="6"/>
+                </Grid>
+                <ListView x:Name="RecordList" ItemsSource="{Binding Records}" SelectedItem="{Binding ActiveRecord}" Grid.Row="1">
+                    <ListView.ItemContainerStyle>
+                        <Style TargetType="ListViewItem">
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                        </Style>
+                    </ListView.ItemContainerStyle>
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition SharedSizeGroup="RecordName" />
+                                    <ColumnDefinition SharedSizeGroup="RecordType" />
+                                    <ColumnDefinition SharedSizeGroup="RecordTtl" />
+                                    <ColumnDefinition SharedSizeGroup="Priority" />
+                                    <ColumnDefinition SharedSizeGroup="Weight" />
+                                    <ColumnDefinition SharedSizeGroup="Port" />
+                                    <ColumnDefinition MinWidth="25" Width="*" />
+                                    <ColumnDefinition SharedSizeGroup="Commit" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="{Binding Name}" Margin="5" VerticalAlignment="Top" />
+                                <TextBlock Grid.Column="1" Margin="5" VerticalAlignment="Top">
+                                    <TextBlock.Style>
+                                        <Style>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Type}" Value="Microsoft.Network/dnszones/A">
+                                                    <Setter Property="TextBlock.Text" Value="A" />
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Type}" Value="Microsoft.Network/dnszones/AAAA">
+                                                    <Setter Property="TextBlock.Text" Value="AAAA" />
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Type}" Value="Microsoft.Network/dnszones/CNAME">
+                                                    <Setter Property="TextBlock.Text" Value="CNAME" />
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Type}" Value="Microsoft.Network/dnszones/MX">
+                                                    <Setter Property="TextBlock.Text" Value="MX" />
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Type}" Value="Microsoft.Network/dnszones/SRV">
+                                                    <Setter Property="TextBlock.Text" Value="SRV" />
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Type}" Value="Microsoft.Network/dnszones/TXT">
+                                                    <Setter Property="TextBlock.Text" Value="TXT" />
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Type}" Value="Microsoft.Network/dnszones/PTR">
+                                                    <Setter Property="TextBlock.Text" Value="PTR" />
+                                                </DataTrigger>
+                                                <MultiDataTrigger>
+                                                    <MultiDataTrigger.Conditions>
+                                                        <Condition Binding="{Binding Type}" Value="Microsoft.Network/dnszones" />
+                                                        <Condition Binding="{Binding Properties.SoaRecord, Converter={StaticResource isNullConverter}}" Value="False" />
+                                                    </MultiDataTrigger.Conditions>
+                                                    <Setter Property="TextBlock.Text" Value="SOA" />
+                                                </MultiDataTrigger>
+                                                <MultiDataTrigger>
+                                                    <MultiDataTrigger.Conditions>
+                                                        <Condition Binding="{Binding Type}" Value="Microsoft.Network/dnszones" />
+                                                        <Condition Binding="{Binding Properties.NsRecords, Converter={StaticResource isNullConverter}}" Value="False" />
+                                                    </MultiDataTrigger.Conditions>
+                                                    <Setter Property="TextBlock.Text" Value="NS" />
+                                                </MultiDataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                                <TextBox Text="{Binding Properties.Ttl}" Grid.Column="2" Margin="5" VerticalAlignment="Top" />
 
-                            <TextBlock Text="{Binding Properties.Ttl}" Grid.Column="2" Margin="5" />
+                                <ContentControl Grid.Column="3" Content="{Binding}">
+                                    <ContentControl.Style>
+                                        <Style TargetType="ContentControl">
+                                            <Setter Property="ContentTemplate">
+                                                <Setter.Value>
+                                                    <DataTemplate/>
+                                                </Setter.Value>
+                                            </Setter>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Type}" Value="Microsoft.Network/dnszones/MX">
+                                                    <Setter Property="ContentTemplate">
+                                                        <Setter.Value>
+                                                            <DataTemplate>
+                                                                <ListView ItemsSource="{Binding Properties.MxRecords}" ItemContainerStyle="{DynamicResource ListViewStretch}">
+                                                                    <ListView.ItemTemplate>
+                                                                        <DataTemplate>
+                                                                            <TextBox Text="{Binding Preference}" />
+                                                                        </DataTemplate>
+                                                                    </ListView.ItemTemplate>
+                                                                </ListView>                                       
+                                                            </DataTemplate>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Type}" Value="Microsoft.Network/dnszones/SRV">
+                                                    <Setter Property="ContentTemplate">
+                                                        <Setter.Value>
+                                                            <DataTemplate>
+                                                                <ListView ItemsSource="{Binding Properties.SrvRecords}" ItemContainerStyle="{DynamicResource ListViewStretch}">
+                                                                    <ListView.ItemTemplate>
+                                                                        <DataTemplate>
+                                                                            <TextBox Text="{Binding Priority}" />
+                                                                        </DataTemplate>
+                                                                    </ListView.ItemTemplate>
+                                                                </ListView>
+                                                            </DataTemplate>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </ContentControl.Style>
+                                </ContentControl>
+                                <ContentControl Grid.Column="4" Content="{Binding}">
+                                    <ContentControl.Style>
+                                        <Style TargetType="ContentControl">
+                                            <Setter Property="ContentTemplate">
+                                                <Setter.Value>
+                                                    <DataTemplate/>
+                                                </Setter.Value>
+                                            </Setter>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Type}" Value="Microsoft.Network/dnszones/SRV">
+                                                    <Setter Property="ContentTemplate">
+                                                        <Setter.Value>
+                                                            <DataTemplate>
+                                                                <ListView ItemsSource="{Binding Properties.SrvRecords}" ItemContainerStyle="{DynamicResource ListViewStretch}">
+                                                                    <ListView.ItemTemplate>
+                                                                        <DataTemplate>
+                                                                            <TextBox Text="{Binding Weight}" />
+                                                                        </DataTemplate>
+                                                                    </ListView.ItemTemplate>
+                                                                </ListView>
+                                                            </DataTemplate>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                </DataTrigger>
 
-                            <ContentControl Grid.Column="3">
-                                <ContentControl.ContentTemplate>
-                                    <DataTemplate>
-                                        <DataTemplate.Triggers>
-                                            <DataTrigger Binding="{Binding Type}" Value="Microsoft.Network/dnszones/MX">
-                                                <Setter Property="Content">
-                                                    <Setter.Value>
-                                                        <TextBox Text="{Binding HasAnimatedProperties.MxRecords[0].Preference}" />
-                                                    </Setter.Value>
-                                                </Setter>
-                                            </DataTrigger>
-                                        </DataTemplate.Triggers>
-                                    </DataTemplate>
-                                </ContentControl.ContentTemplate>
-                            </ContentControl>
-
-
-                        </Grid>
-                    </DataTemplate>
-                </ListView.ItemTemplate>
-            </ListView>
-            <Button Content="Delete" Grid.Row="1"  />
-            <Button Content="Add" Grid.Row="1" Grid.Column="1"  />
+                                            </Style.Triggers>
+                                        </Style>
+                                    </ContentControl.Style>
+                                </ContentControl>
+                                <ContentControl Grid.Column="5" Content="{Binding}">
+                                    <ContentControl.Style>
+                                        <Style TargetType="ContentControl">
+                                            <Setter Property="ContentTemplate">
+                                                <Setter.Value>
+                                                    <DataTemplate/>
+                                                </Setter.Value>
+                                            </Setter>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Type}" Value="Microsoft.Network/dnszones/SRV">
+                                                    <Setter Property="ContentTemplate">
+                                                        <Setter.Value>
+                                                            <DataTemplate>
+                                                                <ListView ItemsSource="{Binding Properties.SrvRecords}" ItemContainerStyle="{DynamicResource ListViewStretch}">
+                                                                    <ListView.ItemTemplate>
+                                                                        <DataTemplate>
+                                                                            <TextBox Text="{Binding Port}" />
+                                                                        </DataTemplate>
+                                                                    </ListView.ItemTemplate>
+                                                                </ListView>
+                                                            </DataTemplate>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </ContentControl.Style>
+                                </ContentControl>
+                                <ContentControl Grid.Column="6" Content="{Binding}">
+                                    <ContentControl.Style>
+                                        <Style TargetType="ContentControl">
+                                            <Setter Property="ContentTemplate">
+                                                <Setter.Value>
+                                                    <DataTemplate/>
+                                                </Setter.Value>
+                                            </Setter>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Type}" Value="Microsoft.Network/dnszones/A">
+                                                    <Setter Property="ContentTemplate">
+                                                        <Setter.Value>
+                                                            <DataTemplate>
+                                                                <ListView ItemsSource="{Binding Properties.ARecords}" ItemContainerStyle="{DynamicResource ListViewStretch}">
+                                                                    <ListView.ItemTemplate>
+                                                                        <DataTemplate>
+                                                                            <ContentControl Style="{DynamicResource AddDeleteRow}">
+                                                                                <TextBox Text="{Binding Ipv4Address}" />
+                                                                            </ContentControl>
+                                                                        </DataTemplate>
+                                                                    </ListView.ItemTemplate>
+                                                                </ListView>
+                                                            </DataTemplate>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Type}" Value="Microsoft.Network/dnszones/AAAA">
+                                                    <Setter Property="ContentTemplate">
+                                                        <Setter.Value>
+                                                            <DataTemplate>
+                                                                <ListView ItemsSource="{Binding Properties.AaaaRecords}" ItemContainerStyle="{DynamicResource ListViewStretch}">
+                                                                    <ListView.ItemTemplate>
+                                                                        <DataTemplate>
+                                                                            <ContentControl Style="{DynamicResource AddDeleteRow}">
+                                                                                <TextBox Text="{Binding Ipv6Address}" />
+                                                                            </ContentControl>
+                                                                        </DataTemplate>
+                                                                    </ListView.ItemTemplate>
+                                                                </ListView>
+                                                            </DataTemplate>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Type}" Value="Microsoft.Network/dnszones/TXT">
+                                                    <Setter Property="ContentTemplate">
+                                                        <Setter.Value>
+                                                            <DataTemplate>
+                                                                <ListView ItemsSource="{Binding Properties.TxtRecords}" ItemContainerStyle="{DynamicResource ListViewStretch}">
+                                                                    <ListView.ItemTemplate>
+                                                                        <DataTemplate>
+                                                                            <ContentControl Style="{DynamicResource AddDeleteRow}">
+                                                                                <TextBox Text="{Binding Value}" />
+                                                                            </ContentControl>
+                                                                        </DataTemplate>
+                                                                    </ListView.ItemTemplate>
+                                                                </ListView>
+                                                            </DataTemplate>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Type}" Value="Microsoft.Network/dnszones/MX">
+                                                    <Setter Property="ContentTemplate">
+                                                        <Setter.Value>
+                                                            <DataTemplate>
+                                                                <ListView ItemsSource="{Binding Properties.MxRecords}" ItemContainerStyle="{DynamicResource ListViewStretch}">
+                                                                    <ListView.ItemTemplate>
+                                                                        <DataTemplate>
+                                                                            <ContentControl Style="{DynamicResource AddDeleteRow}">
+                                                                                <TextBox Text="{Binding Exchange}" />
+                                                                            </ContentControl>
+                                                                        </DataTemplate>
+                                                                    </ListView.ItemTemplate>
+                                                                </ListView>
+                                                            </DataTemplate>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Type}" Value="Microsoft.Network/dnszones/CNAME">
+                                                    <Setter Property="ContentTemplate">
+                                                        <Setter.Value>
+                                                            <DataTemplate>
+                                                                <TextBox MinWidth="25" Text="{Binding Properties.CnameRecord.Cname}" />
+                                                            </DataTemplate>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Type}" Value="Microsoft.Network/dnszones/SRV">
+                                                    <Setter Property="ContentTemplate">
+                                                        <Setter.Value>
+                                                            <DataTemplate>
+                                                                <ListView ItemsSource="{Binding Properties.SrvRecords}" ItemContainerStyle="{DynamicResource ListViewStretch}">
+                                                                    <ListView.ItemTemplate>
+                                                                        <DataTemplate>
+                                                                            <ContentControl Style="{DynamicResource AddDeleteRow}">
+                                                                                <TextBox Text="{Binding Target}" />
+                                                                            </ContentControl>
+                                                                        </DataTemplate>
+                                                                    </ListView.ItemTemplate>
+                                                                </ListView>
+                                                            </DataTemplate>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                </DataTrigger>
+                                                <MultiDataTrigger>
+                                                    <MultiDataTrigger.Conditions>
+                                                        <Condition Binding="{Binding Type}" Value="Microsoft.Network/dnszones" />
+                                                        <Condition Binding="{Binding Properties.SoaRecord, Converter={StaticResource isNullConverter}}" Value="False" />
+                                                    </MultiDataTrigger.Conditions>
+                                                    <Setter Property="ContentTemplate">
+                                                        <Setter.Value>
+                                                            <DataTemplate>
+                                                                <Grid>
+                                                                    <Grid.ColumnDefinitions>
+                                                                        <ColumnDefinition Width="Auto" />
+                                                                        <ColumnDefinition Width="Auto" />
+                                                                    </Grid.ColumnDefinitions>
+                                                                    <Grid.RowDefinitions>
+                                                                        <RowDefinition Height="Auto" />
+                                                                        <RowDefinition Height="Auto" />
+                                                                        <RowDefinition Height="Auto" />
+                                                                        <RowDefinition Height="Auto" />
+                                                                        <RowDefinition Height="Auto" />
+                                                                        <RowDefinition Height="Auto" />
+                                                                        <RowDefinition Height="Auto" />
+                                                                    </Grid.RowDefinitions>
+                                                                    <TextBlock Text="EMail: " />
+                                                                    <TextBlock Grid.Column="1" Text="{Binding Properties.SoaRecord.Email}" />
+                                                                    <TextBlock Grid.Row="1" Text="Expire Time: " />
+                                                                    <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Properties.SoaRecord.ExpireTime}" />
+                                                                    <TextBlock Grid.Row="2" Text="Host: " />
+                                                                    <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding Properties.SoaRecord.Host}" />
+                                                                    <TextBlock Grid.Row="3" Text="Minimum TTL: " />
+                                                                    <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding Properties.SoaRecord.MinimumTtl}" />
+                                                                    <TextBlock Grid.Row="4" Text="Refresh time: " />
+                                                                    <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding Properties.SoaRecord.RefreshTime}" />
+                                                                    <TextBlock Grid.Row="5" Text="Retry time: " />
+                                                                    <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding Properties.SoaRecord.RetryTime}" />
+                                                                    <TextBlock Grid.Row="6" Text="Serial number: " />
+                                                                    <TextBlock Grid.Row="6" Grid.Column="1" Text="{Binding Properties.SoaRecord.SerialNumber}" />
+                                                                </Grid>
+                                                            </DataTemplate>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                </MultiDataTrigger>
+                                                <MultiDataTrigger>
+                                                    <MultiDataTrigger.Conditions>
+                                                        <Condition Binding="{Binding Type}" Value="Microsoft.Network/dnszones" />
+                                                        <Condition Binding="{Binding Properties.NsRecords, Converter={StaticResource isNullConverter}}" Value="False" />
+                                                    </MultiDataTrigger.Conditions>
+                                                    <Setter Property="ContentTemplate">
+                                                        <Setter.Value>
+                                                            <DataTemplate>
+                                                                <ListView ItemsSource="{Binding Properties.NsRecords}" ItemContainerStyle="{DynamicResource ListViewStretch}">
+                                                                    <ListView.ItemTemplate>
+                                                                        <DataTemplate>
+                                                                            <TextBlock Text="{Binding Nsdname}" />
+                                                                        </DataTemplate>
+                                                                    </ListView.ItemTemplate>
+                                                                </ListView>
+                                                            </DataTemplate>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                </MultiDataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </ContentControl.Style>
+                                </ContentControl>
+                                <Button Content="Commit" Command="{Binding DataContext.CommitRecordCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}" Grid.ColumnSpan="1" Grid.Column="7">
+                                    <Button.Style>
+                                        <Style>
+                                            <Setter Property="Button.Visibility" Value="Hidden" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListViewItem}}}" Value="True">
+                                                    <Setter Property="Button.Visibility" Value="Visible" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                </Button>
+                            </Grid>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </Grid>
+            <StackPanel Orientation="Horizontal" Grid.Row="1" Grid.ColumnSpan="2">
+                <Button Command="{Binding DeleteRecordCommand}" CommandParameter="{Binding SelectedItem, Source=RecordList}" Content="Delete" />
+                <Button Command="{Binding AddRecordCommand}" CommandParameter="A" Content="Add A record" Grid.Row="1" Grid.Column="1"  />
+                <Button Command="{Binding AddRecordCommand}" CommandParameter="AAAA" Content="Add AAAA record" Grid.Row="1" Grid.Column="1"  />
+                <Button Command="{Binding AddRecordCommand}" CommandParameter="CNAME" Content="Add CNAME record" Grid.Row="1" Grid.Column="1"  />
+                <Button Command="{Binding AddRecordCommand}" CommandParameter="MX" Content="Add MX record" Grid.Row="1" Grid.Column="1"  />
+                <Button Command="{Binding AddRecordCommand}" CommandParameter="SRV" Content="Add SRV record" Grid.Row="1" Grid.Column="1"  />
+                <Button Command="{Binding AddRecordCommand}" CommandParameter="TXT" Content="Add TXT record" Grid.Row="1" Grid.Column="1"  />
+            </StackPanel>
         </Grid>
-
     </Grid>
 </Window>

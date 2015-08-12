@@ -5,10 +5,10 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:AzureDNSManager"
         mc:Ignorable="d"
-        Title="{Binding Caption}" Width="300" Height="124">
+        Title="{Binding Caption}" Width="300" Height="124" Activated="Window_Activated">
     <StackPanel>
         <TextBlock Text="{Binding Prompt}" Margin="5" FontSize="16" />
-        <TextBox Text="{Binding Value}" Margin="5"/>
+        <TextBox x:Name="txtbox" Text="{Binding Value}" Margin="5" GotFocus="txtbox_GotFocus" />
         <StackPanel Orientation="Horizontal" Margin="0" HorizontalAlignment="Right">
             <Button Content="Cancel" Margin="5" BorderThickness="1" IsCancel="True" />
             <Button Content="OK" Margin="5" IsDefault="True" IsEnabled="{Binding Value.Length}" Click="OKButton_Click" />

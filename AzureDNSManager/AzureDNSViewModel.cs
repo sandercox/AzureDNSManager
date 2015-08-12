@@ -110,11 +110,19 @@ namespace AzureDNSManager
         private AzureContext _azureContext;
 
         public ICommand AddZoneCommand { get; set; }
+        public ICommand AddRecordCommand { get; set; }
+        public ICommand DeleteRecordCommand { get; set; }
+        public ICommand CommitRecordCommand { get; set; }
+        public ICommand AddRecordEntryCommand { get; set; }
 
 
         public AzureDNSViewModel()
         {
             AddZoneCommand = new Command(this.AddZone);
+            AddRecordCommand = new Command(this.AddRecord);
+            DeleteRecordCommand = new Command(this.DeleteRecord);
+            CommitRecordCommand = new Command(this.CommitRecord);
+            AddRecordEntryCommand = new Command(this.AddRecordEntry);
 
             try
             {
@@ -175,7 +183,262 @@ namespace AzureDNSManager
             }
         }
 
-        public async void AddZone()
+        protected async void AddRecord(object param)
+        {
+            RecordSet rs = new RecordSet("global");
+            string typeString = param.ToString();
+            InputDialog dlg;
+            switch (typeString)
+            {
+                case "A":
+                    dlg = new InputDialog("Add A record", "Enter the 'name' of the record", "@");
+                    if (dlg.ShowDialog() == true)
+                    {
+                        rs.Name = dlg.Value;
+                    } else
+                    {
+                        return;
+                    }
+                    dlg = new InputDialog("Add A record", "Enter the 'target' for the record", "127.0.0.1");
+                    if (dlg.ShowDialog() == true)
+                    {
+                        rs.Properties = new RecordSetProperties(600);
+                        rs.Properties.ARecords = new List<ARecord>();
+                        rs.Properties.ARecords.Add(new ARecord(dlg.Value));
+                    }
+                    else
+                    {
+                        return;
+                    }
+                    rs.Type = "Microsoft.Network/dnszones/A";
+                    break;
+                case "AAAA":
+                    dlg = new InputDialog("Add AAAA record", "Enter the 'name' of the record", "@");
+                    if (dlg.ShowDialog() == true)
+                    {
+                        rs.Name = dlg.Value;
+                    }
+                    else
+                    {
+                        return;
+                    }
+                    dlg = new InputDialog("Add AAAA record", "Enter the 'target' for the record", "::1");
+                    if (dlg.ShowDialog() == true)
+                    {
+                        rs.Properties = new RecordSetProperties(600);
+                        rs.Properties.AaaaRecords = new List<AaaaRecord>();
+                        rs.Properties.AaaaRecords.Add(new AaaaRecord(dlg.Value));
+                    }
+                    else
+                    {
+                        return;
+                    }
+                    rs.Type = "Microsoft.Network/dnszones/AAAA";
+                    break;
+                case "CNAME":
+                    dlg = new InputDialog("Add CNAME record", "Enter the 'name' of the record", "@");
+                    if (dlg.ShowDialog() == true)
+                    {
+                        rs.Name = dlg.Value;
+                    }
+                    else
+                    {
+                        return;
+                    }
+                    dlg = new InputDialog("Add CNAME record", "Enter the 'target' for the record", ActiveZone.Name);
+                    if (dlg.ShowDialog() == true)
+                    {
+                        rs.Properties = new RecordSetProperties(600);
+                        rs.Properties.CnameRecord = new CnameRecord(dlg.Value);
+                    }
+                    else
+                    {
+                        return;
+                    }
+                    rs.Type = "Microsoft.Network/dnszones/CNAME";
+                    break;
+                case "MX":
+                    rs.Name = "@";
+                    dlg = new InputDialog("Add MX record", "Enter the 'preference / priority' of the record", "10");
+                    rs.Properties = new RecordSetProperties(600);
+                    rs.Properties.MxRecords = new List<MxRecord>();
+                    rs.Properties.MxRecords.Add(new MxRecord());
+                    if (dlg.ShowDialog() == true)
+                    {
+                        rs.Properties.MxRecords[0].Preference = ushort.Parse(dlg.Value);
+                    }
+                    else
+                    {
+                        return;
+                    }
+                    dlg = new InputDialog("Add MX record", "Enter the 'target / exchange' for the record", "mx1" + ActiveZone.Name);
+                    if (dlg.ShowDialog() == true)
+                    {
+                        rs.Properties.MxRecords[0].Exchange = dlg.Value;
+                    }
+                    else
+                    {
+                        return;
+                    }
+                    rs.Type = "Microsoft.Network/dnszones/MX";
+                    break;
+                case "SRV":
+                    dlg = new InputDialog("Add SRV record", "Enter the 'name/origin' of the record", "@");
+                    if (dlg.ShowDialog() == true)
+                    {
+                        rs.Name = dlg.Value;
+                    }
+                    else
+                    {
+                        return;
+                    }
+                    rs.Properties = new RecordSetProperties(600);
+                    rs.Properties.SrvRecords = new List<SrvRecord>();
+                    rs.Properties.SrvRecords.Add(new SrvRecord());
+
+                    dlg = new InputDialog("Add SRV record", "Enter the 'priority' for the record", ActiveZone.Name);
+                    if (dlg.ShowDialog() == true)
+                    {
+                        rs.Properties.SrvRecords[0].Priority = ushort.Parse(dlg.Value);
+                    }
+                    else
+                    {
+                        return;
+                    }
+
+                    dlg = new InputDialog("Add SRV record", "Enter the 'weight' for the record", ActiveZone.Name);
+                    if (dlg.ShowDialog() == true)
+                    {
+                        rs.Properties.SrvRecords[0].Weight = ushort.Parse(dlg.Value);
+                    }
+                    else
+                    {
+                        return;
+                    }
+
+                    dlg = new InputDialog("Add SRV record", "Enter the 'port' for the record", ActiveZone.Name);
+                    if (dlg.ShowDialog() == true)
+                    {
+                        rs.Properties.SrvRecords[0].Port = ushort.Parse(dlg.Value);
+                    }
+                    else
+                    {
+                        return;
+                    }
+                    dlg = new InputDialog("Add SRV record", "Enter the 'target' for the record", ActiveZone.Name);
+                    if (dlg.ShowDialog() == true)
+                    {
+                        rs.Properties.SrvRecords[0].Target = dlg.Value;
+                    }
+                    else
+                    {
+                        return;
+                    }
+                    rs.Type = "Microsoft.Network/dnszones/SRV";
+                    break;
+                case "TXT":
+                    dlg = new InputDialog("Add TXT record", "Enter the 'name/origin' of the record", "@");
+                    if (dlg.ShowDialog() == true)
+                    {
+                        rs.Name = dlg.Value;
+                    }
+                    else
+                    {
+                        return;
+                    }
+                    dlg = new InputDialog("Add TXT record", "Enter the 'target/value' for the record", ActiveZone.Name);
+                    if (dlg.ShowDialog() == true)
+                    {
+                        rs.Properties = new RecordSetProperties(600);
+                        rs.Properties.TxtRecords = new List<TxtRecord>();
+                        rs.Properties.TxtRecords.Add(new TxtRecord(dlg.Value));
+                    }
+                    else
+                    {
+                        return;
+                    }
+                    rs.Type = "Microsoft.Network/dnszones/TXT";
+                    break;
+                default:
+                    return;
+            }
+            try
+            {
+                await _dnsManagementClient.RecordSets.CreateOrUpdateAsync(ActiveResourceGroup.Name, ActiveZone.Name, rs.Name, GetRecordType(rs.Type), new RecordSetCreateOrUpdateParameters(rs));
+                ReloadRecords();
+            }
+            catch(Exception ex)
+            {
+                MessageBox.Show("Failed to add new record. " + ex.Message);
+            }
+        }
+
+        protected void AddRecordEntry(object param)
+        {
+            RecordSet rs = param as RecordSet;
+            if (rs != null)
+            {
+                switch (GetRecordType(rs.Type))
+                {
+                    case RecordType.A:
+                        rs.Properties?.ARecords.Add(new ARecord());
+                        break;
+                    case RecordType.AAAA:
+                        rs.Properties?.AaaaRecords.Add(new AaaaRecord());
+                        break;
+                    case RecordType.MX:
+                        rs.Properties?.MxRecords.Add(new MxRecord());
+                        break;
+                    case RecordType.TXT:
+                        rs.Properties?.TxtRecords.Add(new TxtRecord());
+                        break;
+                    case RecordType.SRV:
+                        rs.Properties?.SrvRecords.Add(new SrvRecord());
+                        break;
+                }
+            }
+            var r = new List<RecordSet>(Records);
+            Records.Clear();
+            Records = new System.Collections.ObjectModel.ObservableCollection<RecordSet>(r);
+        }
+
+        protected async void CommitRecord(object param)
+        {
+            RecordSet rs = param as RecordSet;
+            if (rs != null)
+            {
+                await _dnsManagementClient.RecordSets.CreateOrUpdateAsync(ActiveResourceGroup.Name, ActiveZone.Name, rs.Name, GetRecordType(rs.Type), new RecordSetCreateOrUpdateParameters(rs));
+                ReloadRecords();
+            }
+        }
+
+        protected  RecordType GetRecordType(string type)
+        {
+            switch(type)
+            {
+                case "Microsoft.Network/dnszones/A":
+                    return RecordType.A;
+                case "Microsoft.Network/dnszones/AAAA":
+                    return RecordType.AAAA;
+                case "Microsoft.Network/dnszones/CNAME":
+                    return RecordType.CNAME;
+                case "Microsoft.Network/dnszones/MX":
+                    return RecordType.MX;
+                case "Microsoft.Network/dnszones/PTR":
+                    return RecordType.PTR;
+                case "Microsoft.Network/dnszones/SRV":
+                    return RecordType.SRV;
+                case "Microsoft.Network/dnszones/TXT":
+                    return RecordType.TXT;
+            }
+            throw new ArgumentException("Not a valid record type to be updated!");
+        }
+        protected async void DeleteRecord(object param)
+        {
+
+        }
+
+        protected async void AddZone()
         {
             InputDialog input = new InputDialog("Enter zone name", "Enter the name of the DNS zone to add", "");
             if (ActiveResourceGroup != null && input.ShowDialog() == true)
@@ -224,6 +487,10 @@ namespace AzureDNSManager
                 _azureContext.Subscription.Id = Guid.Parse(ActiveSubscription);
                 _dnsManagementClient = AzureSession.ClientFactory.CreateClient<DnsManagementClient>(_azureContext, AzureEnvironment.Endpoint.ResourceManager);
                 Zones = new System.Collections.ObjectModel.ObservableCollection<Zone>((await _dnsManagementClient.Zones.ListAsync(_activeResourceGroup.Name, null)).Zones);
+                if (Zones?.Count > 0)
+                {
+                    this.ActiveZone = Zones[0];
+                }
             }
         }
 

@@ -1,0 +1,9 @@
+﻿<dns:AzureDNSViewModel xmlns:dns="clr-namespace:AzureDNSManager"
+                       xmlns:arm="clr-namespace:Microsoft.Azure.Management.Resources.Models;assembly=Microsoft.Azure.ResourceManager"
+                       xmlns:adns="clr-namespace:Microsoft.Azure.Management.Dns.Models;assembly=Microsoft.Azure.Management.Dns">
+    <dns:AzureDNSViewModel.ResourceGroups>
+        <arm:ResourceGroupExtended Id="MyID" Name="Resource Group A" Location="global" />
+        <arm:ResourceGroupExtended Id="MyID" Name="Resource Group A" Location="global" />
+        <arm:ResourceGroupExtended Id="MyID" Name="Resource Group A" Location="global" />
+    </dns:AzureDNSViewModel.ResourceGroups>
+</dns:AzureDNSViewModel>
