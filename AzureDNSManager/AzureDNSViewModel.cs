@@ -271,7 +271,7 @@ namespace AzureDNSManager
                     {
                         return;
                     }
-                    dlg = new InputDialog("Add MX record", "Enter the 'target / exchange' for the record", "mx1" + ActiveZone.Name);
+                    dlg = new InputDialog("Add MX record", "Enter the 'target / exchange' for the record", "mx1." + ActiveZone.Name);
                     if (dlg.ShowDialog() == true)
                     {
                         rs.Properties.MxRecords[0].Exchange = dlg.Value;
@@ -296,7 +296,7 @@ namespace AzureDNSManager
                     rs.Properties.SrvRecords = new List<SrvRecord>();
                     rs.Properties.SrvRecords.Add(new SrvRecord());
 
-                    dlg = new InputDialog("Add SRV record", "Enter the 'priority' for the record", ActiveZone.Name);
+                    dlg = new InputDialog("Add SRV record", "Enter the 'priority' for the record", "100");
                     if (dlg.ShowDialog() == true)
                     {
                         rs.Properties.SrvRecords[0].Priority = ushort.Parse(dlg.Value);
@@ -306,7 +306,7 @@ namespace AzureDNSManager
                         return;
                     }
 
-                    dlg = new InputDialog("Add SRV record", "Enter the 'weight' for the record", ActiveZone.Name);
+                    dlg = new InputDialog("Add SRV record", "Enter the 'weight' for the record", "1");
                     if (dlg.ShowDialog() == true)
                     {
                         rs.Properties.SrvRecords[0].Weight = ushort.Parse(dlg.Value);
@@ -316,7 +316,7 @@ namespace AzureDNSManager
                         return;
                     }
 
-                    dlg = new InputDialog("Add SRV record", "Enter the 'port' for the record", ActiveZone.Name);
+                    dlg = new InputDialog("Add SRV record", "Enter the 'port' for the record", "443");
                     if (dlg.ShowDialog() == true)
                     {
                         rs.Properties.SrvRecords[0].Port = ushort.Parse(dlg.Value);
