@@ -114,6 +114,7 @@ namespace AzureDNSManager
         public ICommand DeleteRecordCommand { get; set; }
         public ICommand CommitRecordCommand { get; set; }
         public ICommand AddRecordEntryCommand { get; set; }
+        public ICommand DeleteRecordEntryCommand { get; set; }
 
 
         public AzureDNSViewModel()
@@ -123,6 +124,7 @@ namespace AzureDNSManager
             DeleteRecordCommand = new Command(this.DeleteRecord);
             CommitRecordCommand = new Command(this.CommitRecord);
             AddRecordEntryCommand = new Command(this.AddRecordEntry);
+            DeleteRecordEntryCommand = new Command(this.DeleteRecordEntry);
 
             try
             {
@@ -402,6 +404,65 @@ namespace AzureDNSManager
             Records = new System.Collections.ObjectModel.ObservableCollection<RecordSet>(r);
         }
 
+        protected void DeleteRecordEntry(object param)
+        {
+            List<object> objList = param as List<object>;
+            RecordSet rs = objList?[0] as RecordSet;
+            
+            switch(GetRecordType(rs?.Type))
+            {
+                case RecordType.A:
+                    {
+                        ARecord record = objList?[1] as ARecord;
+                        if (record != null)
+                        {
+                            rs.Properties.ARecords.Remove(record);
+                        }
+                    }
+                    break;
+                case RecordType.AAAA:
+                    {
+                        AaaaRecord record = objList?[1] as AaaaRecord;
+                        if (record != null)
+                        {
+                            rs.Properties.AaaaRecords.Remove(record);
+                        }
+                    }
+                    break;
+                case RecordType.MX:
+                    {
+                        MxRecord  record = objList?[1] as MxRecord ;
+                        if (record != null)
+                        {
+                            rs.Properties.MxRecords.Remove(record);
+                        }
+                    }
+                    break;
+                case RecordType.SRV:
+                    {
+                        SrvRecord record = objList?[1] as SrvRecord;
+                        if (record != null)
+                        {
+                            rs.Properties.SrvRecords.Remove(record);
+                        }
+                    }
+                    break;
+                case RecordType.TXT:
+                    {
+                        TxtRecord record = objList?[1] as TxtRecord;
+                        if (record != null)
+                        {
+                            rs.Properties.TxtRecords.Remove(record);
+                        }
+                    }
+                    break;
+            }
+
+            var r = new List<RecordSet>(Records);
+            Records.Clear();
+            Records = new System.Collections.ObjectModel.ObservableCollection<RecordSet>(r);
+        }
+
         protected async void CommitRecord(object param)
         {
             RecordSet rs = param as RecordSet;
@@ -435,7 +496,13 @@ namespace AzureDNSManager
         }
         protected async void DeleteRecord(object param)
         {
+            RecordSet rs = param as RecordSet;
 
+            if (rs != null)
+            {
+                await _dnsManagementClient.RecordSets.DeleteAsync(ActiveResourceGroup.Name, ActiveZone.Name, rs.Name, GetRecordType(rs.Type), new RecordSetDeleteParameters());
+                ReloadRecords();
+            }
         }
 
         protected async void AddZone()

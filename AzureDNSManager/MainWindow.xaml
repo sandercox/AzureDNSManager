@@ -9,6 +9,7 @@
         Title="Azure DNS Manager" Height="600" Width="900">
     <Window.Resources>
         <local:IsNullConverter x:Key="isNullConverter"/>
+        <local:MultiValueConverter x:Key="multiValue" />
         <Style x:Key="AddDeleteRow" TargetType="ContentControl">
             <Setter Property="Template">
                 <Setter.Value>
@@ -20,7 +21,14 @@
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
                             <ContentPresenter />
-                            <Button Width="20" Content="-" Grid.Column="1" HorizontalAlignment="Center" Margin="10,0,0,0" />
+                            <Button Command="{Binding DataContext.DeleteRecordEntryCommand, RelativeSource={RelativeSource AncestorType=Window}}" Width="20" Content="-" Grid.Column="1" HorizontalAlignment="Center" Margin="10,0,0,0">
+                                <Button.CommandParameter>
+                                    <MultiBinding Converter="{StaticResource multiValue}">
+                                        <Binding Path="DataContext" RelativeSource="{RelativeSource AncestorType=ListBoxItem,AncestorLevel=2}" />
+                                        <Binding Path="DataContext" RelativeSource="{RelativeSource AncestorType=ListBoxItem,AncestorLevel=1}" />
+                                    </MultiBinding>
+                                </Button.CommandParameter>
+                            </Button>
                             <Button Command="{Binding DataContext.AddRecordEntryCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding DataContext, RelativeSource={RelativeSource AncestorType=ListBoxItem,AncestorLevel=2}}" Width="20" Content="+" Grid.Column="2" HorizontalAlignment="Center" Margin="4,0,0,0" />
                         </Grid>
                     </ControlTemplate>
@@ -468,7 +476,7 @@
                 </ListView>
             </Grid>
             <StackPanel Orientation="Horizontal" Grid.Row="1" Grid.ColumnSpan="2">
-                <Button Command="{Binding DeleteRecordCommand}" CommandParameter="{Binding SelectedItem, Source=RecordList}" Content="Delete" />
+                <Button Command="{Binding DeleteRecordCommand}" CommandParameter="{Binding SelectedItem, ElementName=RecordList}" Content="Delete" />
                 <Button Command="{Binding AddRecordCommand}" CommandParameter="A" Content="Add A record" Grid.Row="1" Grid.Column="1"  />
                 <Button Command="{Binding AddRecordCommand}" CommandParameter="AAAA" Content="Add AAAA record" Grid.Row="1" Grid.Column="1"  />
                 <Button Command="{Binding AddRecordCommand}" CommandParameter="CNAME" Content="Add CNAME record" Grid.Row="1" Grid.Column="1"  />
