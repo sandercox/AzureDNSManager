@@ -34,8 +34,6 @@ Find a binary of the program here: http://scox.nl/azure_dns_manager_v0.1.zip
 ## Todo
 
 - Deletion of zone
-- Deletion of record
-- Deletion of line in record
 
 - Nicer dialogs for adding new records
 - Clearer notice on how to commit
