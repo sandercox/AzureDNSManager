@@ -38,6 +38,8 @@ Find a binary of the program here: http://scox.nl/azure_dns_manager_v0.1.zip
 - Nicer dialogs for adding new records
 - Clearer notice on how to commit
 
+- Strip long lines or add scroll lines within record text (especially for DKIM TXT records)
+
 ## Copyright
 
 Copyright Sander Cox
