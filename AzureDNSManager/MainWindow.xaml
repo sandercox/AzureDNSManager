@@ -40,6 +40,10 @@
         </Style>
 
     </Window.Resources>
+    <Window.InputBindings>
+        <KeyBinding Gesture="CTRL+C" Command="{Binding CopyRecordSetCommand}" CommandParameter="{Binding SelectedItems, ElementName=RecordList}" />
+        <KeyBinding Gesture="CTRL+V" Command="{Binding PasteRecordSetCommand}" CommandParameter="{Binding SelectedItems, ElementName=RecordList}" />
+    </Window.InputBindings>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -126,7 +130,7 @@
                     <TextBlock Text="Port"  Margin="5" Grid.Column="5"/>
                     <TextBlock Text="Target"  Margin="5" Grid.Column="6"/>
                 </Grid>
-                <ListView x:Name="RecordList" ItemsSource="{Binding Records}" SelectedItem="{Binding ActiveRecord}" Grid.Row="1">
+                <ListView x:Name="RecordList" ItemsSource="{Binding Records}" Grid.Row="1">
                     <ListView.ItemContainerStyle>
                         <Style TargetType="ListViewItem">
                             <Setter Property="HorizontalContentAlignment" Value="Stretch" />

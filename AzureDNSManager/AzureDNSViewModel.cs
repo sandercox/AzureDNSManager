@@ -116,6 +116,10 @@ namespace AzureDNSManager
         public ICommand AddRecordEntryCommand { get; set; }
         public ICommand DeleteRecordEntryCommand { get; set; }
 
+        private IEnumerable<RecordSet> _copiedRecordSet = null;
+        public ICommand CopyRecordSetCommand { get; set; }
+        public ICommand PasteRecordSetCommand { get; set; }
+
 
         public AzureDNSViewModel()
         {
@@ -125,6 +129,8 @@ namespace AzureDNSManager
             CommitRecordCommand = new Command(this.CommitRecord);
             AddRecordEntryCommand = new Command(this.AddRecordEntry);
             DeleteRecordEntryCommand = new Command(this.DeleteRecordEntry);
+            CopyRecordSetCommand = new Command(this.CopyRecordSet);
+            PasteRecordSetCommand = new Command(this.PasteRecordSet);
 
             try
             {
@@ -508,6 +514,35 @@ namespace AzureDNSManager
                     {
                         MessageBox.Show("Failed to delete record: " + rs.Name + " (" + GetRecordType(rs.Type).ToString());
                     }
+                }
+            }
+            ReloadRecords();
+        }
+
+        protected void CopyRecordSet(object param)
+        {
+            IEnumerable<object> copy = param as IEnumerable<object>;
+
+            if (copy != null && copy.All((x)=> x is RecordSet))
+            {
+                List<RecordSet> rsCopy = new List<RecordSet>();
+                foreach (RecordSet rs in copy)
+                {
+                    rsCopy.Add(rs);
+                }
+                _copiedRecordSet = rsCopy;
+            }
+        }
+
+        protected async void PasteRecordSet(object param)
+        {
+            if (_copiedRecordSet != null)
+            {
+                foreach (RecordSet rs in _copiedRecordSet)
+                {
+                    rs.ETag = "";
+                    rs.Id = "";
+                    await _dnsManagementClient.RecordSets.CreateOrUpdateAsync(ActiveResourceGroup.Name, ActiveZone.Name, rs.Name, GetRecordType(rs.Type), new RecordSetCreateOrUpdateParameters(rs));
                 }
             }
             ReloadRecords();
