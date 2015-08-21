@@ -496,13 +496,21 @@ namespace AzureDNSManager
         }
         protected async void DeleteRecord(object param)
         {
-            RecordSet rs = param as RecordSet;
-
-            if (rs != null)
+            foreach (RecordSet rs in (param as IEnumerable<object>))
             {
-                await _dnsManagementClient.RecordSets.DeleteAsync(ActiveResourceGroup.Name, ActiveZone.Name, rs.Name, GetRecordType(rs.Type), new RecordSetDeleteParameters());
-                ReloadRecords();
+                if (rs != null)
+                {
+                    try
+                    {
+                        await _dnsManagementClient.RecordSets.DeleteAsync(ActiveResourceGroup.Name, ActiveZone.Name, rs.Name, GetRecordType(rs.Type), new RecordSetDeleteParameters());
+                    }
+                    catch
+                    {
+                        MessageBox.Show("Failed to delete record: " + rs.Name + " (" + GetRecordType(rs.Type).ToString());
+                    }
+                }
             }
+            ReloadRecords();
         }
 
         protected async void AddZone()

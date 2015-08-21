@@ -476,7 +476,7 @@
                 </ListView>
             </Grid>
             <StackPanel Orientation="Horizontal" Grid.Row="1" Grid.ColumnSpan="2">
-                <Button Command="{Binding DeleteRecordCommand}" CommandParameter="{Binding SelectedItem, ElementName=RecordList}" Content="Delete" />
+                <Button Command="{Binding DeleteRecordCommand}" CommandParameter="{Binding SelectedItems, ElementName=RecordList}" Content="Delete" />
                 <Button Command="{Binding AddRecordCommand}" CommandParameter="A" Content="Add A record" Grid.Row="1" Grid.Column="1"  />
                 <Button Command="{Binding AddRecordCommand}" CommandParameter="AAAA" Content="Add AAAA record" Grid.Row="1" Grid.Column="1"  />
                 <Button Command="{Binding AddRecordCommand}" CommandParameter="CNAME" Content="Add CNAME record" Grid.Row="1" Grid.Column="1"  />
