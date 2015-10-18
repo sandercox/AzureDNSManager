@@ -167,7 +167,19 @@ namespace AzureDNSManager
             try
             {
                 IAccessToken token = AzureSession.AuthenticationFactory.Authenticate(_azureContext.Account, _azureContext.Environment, "common", null, Microsoft.Azure.Common.Authentication.ShowDialog.Auto);
-                _azureContext.Subscription.Account = _azureContext.Account.Id;
+                switch(token.LoginType)
+                {
+                    case LoginType.OrgId:
+                        Debug.WriteLine("Connecting with 'OrgId' account");
+                        break;
+                    case LoginType.LiveId:
+                        Debug.WriteLine("Connecting with 'LiveId' account");
+                        break;
+                    default:
+                        Debug.WriteLine("Connecting with unknown account type");
+                        break;
+                }
+                //_azureContext.Subscription.Account = _azureContext.Account.Id;
             } catch (Exception ex)
             {
                 MessageBox.Show("Failed to authenticate with Azure!");
@@ -176,10 +188,10 @@ namespace AzureDNSManager
             }
 
             try
-            { 
+            {
                 _subscriptionClient = AzureSession.ClientFactory.CreateClient<SubscriptionClient>(_azureContext, AzureEnvironment.Endpoint.ResourceManager);
                 _subscriptions = _subscriptionClient.Subscriptions.List().Subscriptions;
-                if (_subscriptions?.Count == 1)
+                if (_subscriptions?.Count >= 1)
                 {
                     ActiveSubscription = _subscriptions[0].SubscriptionId;
                 }
