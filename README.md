@@ -1,6 +1,7 @@
 # Azure DNS Manager
 
-Quick UI based DNS manager for Azure DNS using Azure .NET Api thru NuGet.
+Quick UI based DNS manager for Azure DNS using Azure .NET Api thru NuGet. 
+Created in Visual Studio 2015 and using C# v6 language features.
 
 ## Features
 
