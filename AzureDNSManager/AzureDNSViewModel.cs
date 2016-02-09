@@ -4,7 +4,6 @@ using Microsoft.Azure.Management.Dns;
 using Microsoft.Azure.Management.Dns.Models;
 using Microsoft.Azure.Management.Resources;
 using Microsoft.Azure.Management.Resources.Models;
-using Microsoft.Azure.Subscriptions;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -24,9 +23,10 @@ namespace AzureDNSManager
         private SubscriptionClient _subscriptionClient;
         private DnsManagementClient _dnsManagementClient;
         private ResourceManagementClient _resourceManagementClient;
+        private Microsoft.Rest.ServiceClientCredentials _tokenCreds;
 
-        private IList<Microsoft.Azure.Management.Resources.Models.ResourceGroupExtended> _resourceGroups = null;
-        public IList<Microsoft.Azure.Management.Resources.Models.ResourceGroupExtended> ResourceGroups
+        private IList<Microsoft.Azure.Management.Resources.Models.ResourceGroup> _resourceGroups = null;
+        public IList<Microsoft.Azure.Management.Resources.Models.ResourceGroup> ResourceGroups
         {
             get { return _resourceGroups; }
             set
@@ -36,8 +36,8 @@ namespace AzureDNSManager
             }
         }
 
-        private ResourceGroupExtended _activeResourceGroup;
-        public ResourceGroupExtended ActiveResourceGroup
+        private ResourceGroup _activeResourceGroup;
+        public ResourceGroup ActiveResourceGroup
         {
             get { return _activeResourceGroup; }
             set
@@ -48,8 +48,8 @@ namespace AzureDNSManager
             }
         }
 
-        private IList<Microsoft.Azure.Subscriptions.Models.Subscription> _subscriptions = null;
-        public IList<Microsoft.Azure.Subscriptions.Models.Subscription> Subscriptions
+        private IList<Microsoft.Azure.Management.Resources.Models.Subscription> _subscriptions = null;
+        public IList<Microsoft.Azure.Management.Resources.Models.Subscription> Subscriptions
         {
             get
             {
@@ -132,8 +132,10 @@ namespace AzureDNSManager
             CopyRecordSetCommand = new Command(this.CopyRecordSet);
             PasteRecordSetCommand = new Command(this.PasteRecordSet);
 
+            string tenant = "Common";
             try
             {
+                var azureEnv = AzureEnvironment.PublicEnvironments["AzureCloud"];
                 var azureAccount = new AzureAccount()
                 {
                     Id = null,
@@ -141,19 +143,18 @@ namespace AzureDNSManager
                     Properties = new Dictionary<AzureAccount.Property, string>()
                         {
                             {
-                                AzureAccount.Property.Tenants, "common"
+                                AzureAccount.Property.Tenants, tenant
                             }
                         }
                 };
                 var azureSub = new AzureSubscription()
                 {
                     Account = azureAccount.Id,
-                    Environment = "AzureCloud",
+                    Environment = azureEnv.Name,
                     Properties = new Dictionary<AzureSubscription.Property, string>()
-                    { { AzureSubscription.Property.Tenants, "common" }}
+                    { { AzureSubscription.Property.Tenants, tenant }}
 
                 };
-                var azureEnv = AzureEnvironment.PublicEnvironments["AzureCloud"];
 
                 _azureContext = new AzureContext(azureSub, azureAccount, azureEnv);
             }
@@ -166,7 +167,7 @@ namespace AzureDNSManager
 
             try
             {
-                IAccessToken token = AzureSession.AuthenticationFactory.Authenticate(_azureContext.Account, _azureContext.Environment, "common", null, Microsoft.Azure.Common.Authentication.ShowDialog.Auto);
+                IAccessToken token = AzureSession.AuthenticationFactory.Authenticate(_azureContext.Account, _azureContext.Environment, tenant, null, Microsoft.Azure.Common.Authentication.ShowDialog.Always);
                 switch(token.LoginType)
                 {
                     case LoginType.OrgId:
@@ -189,8 +190,12 @@ namespace AzureDNSManager
 
             try
             {
-                _subscriptionClient = AzureSession.ClientFactory.CreateClient<SubscriptionClient>(_azureContext, AzureEnvironment.Endpoint.ResourceManager);
-                _subscriptions = _subscriptionClient.Subscriptions.List().Subscriptions;
+                var token = AzureSession.AuthenticationFactory.Authenticate(_azureContext.Account, _azureContext.Environment, tenant, null, Microsoft.Azure.Common.Authentication.ShowDialog.Auto, AzureEnvironment.Endpoint.ResourceManager);
+
+                _tokenCreds = new Microsoft.Rest.TokenCredentials(token.AccessToken);
+
+                _subscriptionClient = new SubscriptionClient(_tokenCreds);
+                _subscriptions = _subscriptionClient.Subscriptions.List().ToList();
                 if (_subscriptions?.Count >= 1)
                 {
                     ActiveSubscription = _subscriptions[0].SubscriptionId;
@@ -593,10 +598,14 @@ namespace AzureDNSManager
             if (ActiveSubscription?.Length > 0)
             {
                 _azureContext.Subscription.Id = Guid.Parse(ActiveSubscription);
-                _resourceManagementClient = AzureSession.ClientFactory.CreateClient<ResourceManagementClient>(_azureContext, AzureEnvironment.Endpoint.ResourceManager);
-                ResourceGroups = (await _resourceManagementClient.ResourceGroups.ListAsync(null)).ResourceGroups;
+
+
+                //_resourceManagementClient = AzureSession.ClientFactory.CreateArmClient<ResourceManagementClient>(_azureContext, AzureEnvironment.Endpoint.ResourceManager);
+                _resourceManagementClient = new ResourceManagementClient(_tokenCreds);
+                _resourceManagementClient.SubscriptionId = ActiveSubscription;
+                ResourceGroups = (await _resourceManagementClient.ResourceGroups.ListAsync()).ToList();
                 if (ResourceGroups?.Count == 1)
-                {
+                { 
                     ActiveResourceGroup = ResourceGroups[0];
                 }
             }
