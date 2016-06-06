@@ -227,9 +227,11 @@ namespace AzureDNSManager
                     dlg = new InputDialog("Add A record", "Enter the 'target' for the record", "127.0.0.1");
                     if (dlg.ShowDialog() == true)
                     {
-                        rs.Properties = new RecordSetProperties(600);
-                        rs.Properties.ARecords = new List<ARecord>();
-                        rs.Properties.ARecords.Add(new ARecord(dlg.Value));
+                        rs.Properties = new RecordSetProperties
+                        {
+                            Ttl = 600,
+                            ARecords = new List<ARecord> { new ARecord(dlg.Value) }
+                        };
                     }
                     else
                     {
@@ -250,9 +252,11 @@ namespace AzureDNSManager
                     dlg = new InputDialog("Add AAAA record", "Enter the 'target' for the record", "::1");
                     if (dlg.ShowDialog() == true)
                     {
-                        rs.Properties = new RecordSetProperties(600);
-                        rs.Properties.AaaaRecords = new List<AaaaRecord>();
-                        rs.Properties.AaaaRecords.Add(new AaaaRecord(dlg.Value));
+                        rs.Properties = new RecordSetProperties
+                        {
+                            Ttl = 600,
+                            AaaaRecords = new List<AaaaRecord> { new AaaaRecord(dlg.Value) }
+                        };
                     }
                     else
                     {
@@ -273,8 +277,11 @@ namespace AzureDNSManager
                     dlg = new InputDialog("Add CNAME record", "Enter the 'target' for the record", ActiveZone.Name);
                     if (dlg.ShowDialog() == true)
                     {
-                        rs.Properties = new RecordSetProperties(600);
-                        rs.Properties.CnameRecord = new CnameRecord(dlg.Value);
+                        rs.Properties = new RecordSetProperties
+                        {
+                            Ttl = 600,
+                            CnameRecord = new CnameRecord(dlg.Value)
+                        };
                     }
                     else
                     {
@@ -285,9 +292,11 @@ namespace AzureDNSManager
                 case "MX":
                     rs.Name = "@";
                     dlg = new InputDialog("Add MX record", "Enter the 'preference / priority' of the record", "10");
-                    rs.Properties = new RecordSetProperties(600);
-                    rs.Properties.MxRecords = new List<MxRecord>();
-                    rs.Properties.MxRecords.Add(new MxRecord());
+                    rs.Properties = new RecordSetProperties()
+                    {
+                        Ttl = 600,
+                        MxRecords = new List<MxRecord> { new MxRecord() }
+                    };
                     if (dlg.ShowDialog() == true)
                     {
                         rs.Properties.MxRecords[0].Preference = ushort.Parse(dlg.Value);
@@ -317,9 +326,14 @@ namespace AzureDNSManager
                     {
                         return;
                     }
-                    rs.Properties = new RecordSetProperties(600);
-                    rs.Properties.SrvRecords = new List<SrvRecord>();
-                    rs.Properties.SrvRecords.Add(new SrvRecord());
+                    rs.Properties = new RecordSetProperties
+                    {
+                        Ttl = 600,
+                        SrvRecords = new List<SrvRecord>
+                        {
+                            new SrvRecord()
+                        }
+                    };
 
                     dlg = new InputDialog("Add SRV record", "Enter the 'priority' for the record", "100");
                     if (dlg.ShowDialog() == true)
@@ -374,9 +388,14 @@ namespace AzureDNSManager
                     dlg = new InputDialog("Add TXT record", "Enter the 'target/value' for the record", ActiveZone.Name);
                     if (dlg.ShowDialog() == true)
                     {
-                        rs.Properties = new RecordSetProperties(600);
-                        rs.Properties.TxtRecords = new List<TxtRecord>();
-                        rs.Properties.TxtRecords.Add(new TxtRecord(dlg.Value));
+                        rs.Properties = new RecordSetProperties
+                        {
+                            Ttl = 600,
+                            TxtRecords = new List<TxtRecord>
+                            {
+                                new TxtRecord(new List<string>() { dlg.Value })
+                            }
+                        };
                     }
                     else
                     {
@@ -389,7 +408,7 @@ namespace AzureDNSManager
             }
             try
             {
-                await _dnsManagementClient.RecordSets.CreateOrUpdateAsync(ActiveResourceGroup.Name, ActiveZone.Name, rs.Name, GetRecordType(rs.Type), new RecordSetCreateOrUpdateParameters(rs));
+                await _dnsManagementClient.RecordSets.CreateOrUpdateAsync(ActiveResourceGroup.Name, ActiveZone.Name, rs.Name, GetRecordType(rs.Type), new RecordSetCreateOrUpdateParameters(rs), null, null);
                 ReloadRecords();
             }
             catch(Exception ex)
@@ -491,7 +510,7 @@ namespace AzureDNSManager
             RecordSet rs = param as RecordSet;
             if (rs != null)
             {
-                await _dnsManagementClient.RecordSets.CreateOrUpdateAsync(ActiveResourceGroup.Name, ActiveZone.Name, rs.Name, GetRecordType(rs.Type), new RecordSetCreateOrUpdateParameters(rs));
+                await _dnsManagementClient.RecordSets.CreateOrUpdateAsync(ActiveResourceGroup.Name, ActiveZone.Name, rs.Name, GetRecordType(rs.Type), new RecordSetCreateOrUpdateParameters(rs), null, null);
                 ReloadRecords();
             }
         }
@@ -525,7 +544,7 @@ namespace AzureDNSManager
                 {
                     try
                     {
-                        await _dnsManagementClient.RecordSets.DeleteAsync(ActiveResourceGroup.Name, ActiveZone.Name, rs.Name, GetRecordType(rs.Type), new RecordSetDeleteParameters());
+                        await _dnsManagementClient.RecordSets.DeleteAsync(ActiveResourceGroup.Name, ActiveZone.Name, rs.Name, GetRecordType(rs.Type), null, null);
                     }
                     catch
                     {
@@ -559,7 +578,7 @@ namespace AzureDNSManager
                 {
                     rs.ETag = "";
                     rs.Id = "";
-                    await _dnsManagementClient.RecordSets.CreateOrUpdateAsync(ActiveResourceGroup.Name, ActiveZone.Name, rs.Name, GetRecordType(rs.Type), new RecordSetCreateOrUpdateParameters(rs));
+                    await _dnsManagementClient.RecordSets.CreateOrUpdateAsync(ActiveResourceGroup.Name, ActiveZone.Name, rs.Name, GetRecordType(rs.Type), new RecordSetCreateOrUpdateParameters(rs), null, null);
                 }
             }
             ReloadRecords();
@@ -575,7 +594,7 @@ namespace AzureDNSManager
                 p.Zone.Properties = new ZoneProperties();
                 try
                 {
-                    ZoneCreateOrUpdateResponse responseCreateZone = await _dnsManagementClient.Zones.CreateOrUpdateAsync(ActiveResourceGroup.Name, input.Value, p);
+                    ZoneCreateOrUpdateResponse responseCreateZone = await _dnsManagementClient.Zones.CreateOrUpdateAsync(ActiveResourceGroup.Name, input.Value, p, null, null);
                     ReloadZones();
                 } catch(Exception ex)
                 {
@@ -617,7 +636,7 @@ namespace AzureDNSManager
             {
                 _azureContext.Subscription.Id = Guid.Parse(ActiveSubscription);
                 _dnsManagementClient = AzureSession.ClientFactory.CreateClient<DnsManagementClient>(_azureContext, AzureEnvironment.Endpoint.ResourceManager);
-                Zones = new System.Collections.ObjectModel.ObservableCollection<Zone>((await _dnsManagementClient.Zones.ListAsync(_activeResourceGroup.Name, null)).Zones);
+                Zones = new System.Collections.ObjectModel.ObservableCollection<Zone>((await _dnsManagementClient.Zones.ListZonesInResourceGroupAsync(_activeResourceGroup.Name, null)).Zones);
                 if (Zones?.Count > 0)
                 {
                     this.ActiveZone = Zones[0];
